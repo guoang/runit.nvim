@@ -123,10 +123,23 @@ function M.run_by_config(conf, steps, args)
     end
   else
     -- exec commands in order
-    -- TODO: break if any command failed
+    -- break if any command failed
     for _, cmd in ipairs(commands) do
       if type(cmd) == "string" then
-        vim.cmd(cmd)
+        if cmd:match("^!") then
+          vim.cmd(cmd)
+          if vim.v.shell_error ~= 0 then
+            print("[Runit] Command failed: " .. cmd)
+            break
+          end
+        else
+          vim.v.errmsg = ""
+          vim.cmd(cmd)
+          if vim.v.errmsg ~= "" then
+            print("[Runit] Command failed: " .. cmd)
+            break
+          end
+        end
       elseif type(cmd) == "function" then
         if cmd() == false then
           break
